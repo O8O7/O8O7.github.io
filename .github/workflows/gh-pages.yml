@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-gnu,wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          cache-on-failure: "false"
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install Dioxus CLI
+        run: cargo binstall dioxus-cli -y --force
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install Node.js dependencies
+        run: npm install -D @tailwindcss/vite @tailwindcss/cli
+
+      - name: Build TailwindCSS
+        run: npx tailwindcss -i ./tailwind.css -o ./assets/tailwind.css --minify
+
+      - name: Build Dioxus App
+        run: dx build --release
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/dx/o8o7/release/web/public
