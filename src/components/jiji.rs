@@ -5,6 +5,7 @@ use gloo_events::EventListener;
 use web_sys::wasm_bindgen::JsCast;
 use crate::components::controller::Controller;
 use crate::components::cat::Cat;
+use crate::components::bgm::BgmController;
 
 const CAT_WIDTH: f64 = 80.0;
 const CAT_HEIGHT: f64 = 80.0;
@@ -28,7 +29,7 @@ pub fn Jiji() -> Element {
     });
 
     // エリアの幅・高さをDOMから取得してstage_width, stage_heightにセット
-    fn update_stage_size(stage_width: &mut Signal<f64>, stage_height: &mut Signal<f64>) {
+    fn update_stage_size(stage_width: &mut Signal<f64>, stage_height: &mut Signal<f64>, x: &mut Signal<f64>, y: &mut Signal<f64>) {
         if let Some(window) = web_sys::window() {
             if let Some(document) = window.document() {
                 if let Some(area) = document.get_element_by_id("jiji-area") {
@@ -37,6 +38,8 @@ pub fn Jiji() -> Element {
                         let height = el.offset_height() as f64;
                         stage_width.set(width);
                         stage_height.set(height);
+                        x.set((width - CAT_WIDTH) / 2.0);
+                        y.set((height - CAT_HEIGHT) / 2.0);
                     }
                 }
             }
@@ -46,19 +49,25 @@ pub fn Jiji() -> Element {
     use_future({
         let mut stage_width = stage_width.clone();
         let mut stage_height = stage_height.clone();
+        let mut x = x.clone();
+        let mut y = y.clone();
         move || async move {
-            update_stage_size(&mut stage_width, &mut stage_height);
+            update_stage_size(&mut stage_width, &mut stage_height, &mut x, &mut y);
         }
     });
 
     use_effect({
         let mut stage_width = stage_width.clone();
         let mut stage_height = stage_height.clone();
+        let mut x = x.clone();
+        let mut y = y.clone();
         move || {
             let mut stage_width = stage_width.clone();
             let mut stage_height = stage_height.clone();
+            let mut x = x.clone();
+            let mut y = y.clone();
             let listener = EventListener::new(&window().unwrap(), "resize", move |_event| {
-                update_stage_size(&mut stage_width, &mut stage_height);
+                update_stage_size(&mut stage_width, &mut stage_height, &mut x, &mut y);
             });
             (move || drop(listener))()
         }
@@ -161,6 +170,7 @@ pub fn Jiji() -> Element {
             div { style: "position: absolute; left:0; bottom:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 2rem 0 0; z-index:1;" }
             div { style: "position: absolute; right:0; bottom:0; width:32px; height:32px; background:#8b5c2a; border-radius: 2rem 0 0 0; z-index:1;" }
             Controller { move_jiji: EventHandler::new(move_jiji) }
+            BgmController {}
         }
     }
 } 
