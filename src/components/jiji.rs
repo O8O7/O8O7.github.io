@@ -6,6 +6,7 @@ use web_sys::wasm_bindgen::JsCast;
 use crate::components::controller::Controller;
 use crate::components::cat::Cat;
 use crate::components::bgm::BgmController;
+use crate::components::bgm::play_talk_sound;
 
 const CAT_WIDTH: f64 = 80.0;
 const CAT_HEIGHT: f64 = 80.0;
@@ -18,6 +19,17 @@ pub fn Jiji() -> Element {
     let mut y = use_signal(|| 260.0); // (600-80)/2
     let mut dir = use_signal(|| true);
     let mut show_intro = use_signal(|| false);
+
+    // RPG風メッセージ配列
+    let messages = [
+        "こんにちは！",
+        "タップしてくれてありがとう。",
+        "Rust勉強中です。",
+        "よろしくね！"
+    ];
+    let mut msg_idx = use_signal(|| 0);
+    let mut char_count = use_signal(|| 0);
+    let mut typing = use_signal(|| true);
 
     use_future(move || async move {
         let w = window().unwrap().inner_width().unwrap().as_f64().unwrap_or(1000.0);
@@ -73,6 +85,29 @@ pub fn Jiji() -> Element {
         }
     });
 
+    // 1文字ずつ表示＋ピコ音
+    use_effect({
+        let msg_idx = msg_idx.clone();
+        let char_count = char_count.clone();
+        let typing = typing.clone();
+        move || {
+            if typing() {
+                let msg = messages[msg_idx()];
+                if char_count() < msg.chars().count() {
+                    let mut char_count = char_count.clone();
+                    let mut typing = typing.clone();
+                    gloo_timers::callback::Timeout::new(40, move || {
+                        play_talk_sound();
+                        char_count.set(char_count() + 1);
+                        if char_count() + 1 >= msg.chars().count() {
+                            typing.set(false);
+                        }
+                    }).forget();
+                }
+            }
+        }
+    });
+
     let on_keydown = move |evt: KeyboardEvent| {
         match evt.key() {
             Key::ArrowLeft => {
@@ -122,6 +157,15 @@ pub fn Jiji() -> Element {
         }
     };
 
+    // 吹き出し用メッセージを事前に用意
+    let (msg, shown) = if show_intro() {
+        let msg = messages[msg_idx()];
+        let shown = msg.chars().take(char_count()).collect::<String>();
+        (Some(msg), Some(shown))
+    } else {
+        (None, None)
+    };
+
     rsx! {
         div {
             id: "jiji-area",
@@ -129,7 +173,7 @@ pub fn Jiji() -> Element {
                 format!(
                     "
                     position: relative;
-                    width: min(100vw, 600px);
+                    width: calc(100vw - 32px);
                     height: min(90vh, 700px);
                     max-width: 100vw;
                     max-height: 100vh;
@@ -159,9 +203,24 @@ pub fn Jiji() -> Element {
             if show_intro() {
                 div {
                     style: {format!("position: absolute; left: {}px; bottom: {}px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; padding: 0.5rem 1rem; min-width: 180px; z-index: 10; box-shadow: 2px 2px 8px #888; font-family: 'serif';", x(), y() + CAT_HEIGHT + 10.0)},
-                    b { "猫です" }
+                    b { "ジジ（猫）" }
                     br {}
-                    span { "Rust勉強中!" }
+                    span { dangerous_inner_html: shown.as_deref().unwrap_or("") }
+                    if !typing() {
+                        if msg_idx() < messages.len() - 1 {
+                            button {
+                                class: "ml-4 px-2 py-1 rounded bg-indigo-200 text-indigo-900 text-sm font-bold border border-indigo-400 hover:bg-indigo-300 transition-all",
+                                onclick: move |_| {
+                                    msg_idx.set(msg_idx() + 1);
+                                    char_count.set(0);
+                                    typing.set(true);
+                                },
+                                "▶ 次へ"
+                            }
+                        } else {
+                            span { class: "ml-4 text-gray-500 text-xs", "（おわり）" }
+                        }
+                    }
                 }
             }
             // 木の柱風の四隅装飾

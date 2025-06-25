@@ -22,6 +22,20 @@ pub fn play_bgm() {
     }
 }
 
+pub fn play_talk_sound() {
+    let ctx = AudioContext::new().unwrap();
+    let osc = ctx.create_oscillator().unwrap();
+    Reflect::set(osc.as_ref(), &"type".into(), &"square".into()).unwrap();
+    osc.frequency().set_value(800.0);
+    let gain = ctx.create_gain().unwrap();
+    gain.gain().set_value(0.08);
+    osc.connect_with_audio_node(&gain).unwrap();
+    gain.connect_with_audio_node(&ctx.destination()).unwrap();
+    let t = ctx.current_time();
+    osc.start_with_when(t).unwrap();
+    osc.stop_with_when(t + 0.06).unwrap();
+}
+
 pub fn start_bgm_loop() {
     unsafe {
         if BGM_LOOP.is_none() {
