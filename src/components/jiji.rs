@@ -93,22 +93,48 @@ pub fn Jiji() -> Element {
 
     rsx! {
         div {
-            style: {format!("position: relative; width: {}px; height: {}px; background: #f8f8ff; border: 2px solid #444; margin: 2rem auto; outline: none; border-radius: 1.5rem;", stage_width(), stage_height())},
+            style: {
+                format!("
+                    position: relative;
+                    width: min(100vw, 600px);
+                    height: min(70vw, 400px);
+                    max-width: 100vw;
+                    max-height: 70vw;
+                    background: repeating-linear-gradient(90deg, #d6e5b1 0 8%, #c8d6a3 8% 16%),
+                                repeating-linear-gradient(0deg, #d6e5b1 0 8%, #c8d6a3 8% 16%);
+                    background-size: 60px 60px;
+                    border: 12px solid #8b5c2a;
+                    border-radius: 2rem;
+                    box-shadow: 0 0 0 8px #e7d7b1, 0 4px 24px #0004;
+                    margin: 2rem auto;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    overflow: hidden;
+                ")
+            },
             tabindex: 0,
             onkeydown: on_keydown,
             div {
-                style: {format!("position: absolute; left: {}px; bottom: {}px; width: {}px; height: {}px; cursor: pointer;", x(), y(), CAT_WIDTH, CAT_HEIGHT)},
+                style: {format!("position: absolute; left: {}px; bottom: {}px; width: {}px; height: {}px; cursor: pointer; z-index: 2;", x(), y(), CAT_WIDTH, CAT_HEIGHT)},
                 onclick: move |_| show_intro.set(!show_intro()),
                 Cat { dir: dir() }
             }
             if show_intro() {
                 div {
                     style: {format!("position: absolute; left: {}px; bottom: {}px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; padding: 0.5rem 1rem; min-width: 180px; z-index: 10; box-shadow: 2px 2px 8px #888; font-family: 'serif';", x(), y() + CAT_HEIGHT + 10.0)},
-                    b { "猫です" }
+                    b { "ジジ（猫）" }
                     br {}
-                    span { "はじめまして！" }
+                    span { "こんにちは！ぼくはジジ。RPGとプログラミングが大好きな黒猫です。よろしくね！" }
                 }
             }
+            // 木の柱風の四隅装飾
+            div { style: "position: absolute; left:0; top:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 0 2rem 0; z-index:1;" }
+            div { style: "position: absolute; right:0; top:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 0 0 2rem; z-index:1;" }
+            div { style: "position: absolute; left:0; bottom:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 2rem 0 0; z-index:1;" }
+            div { style: "position: absolute; right:0; bottom:0; width:32px; height:32px; background:#8b5c2a; border-radius: 2rem 0 0 0; z-index:1;" }
             Controller { move_jiji: EventHandler::new(move_jiji) }
         }
     }
