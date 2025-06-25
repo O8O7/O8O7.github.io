@@ -130,9 +130,9 @@ pub fn Jiji() -> Element {
                     "
                     position: relative;
                     width: min(100vw, 600px);
-                    height: min(calc(100vw * 0.7), 500px);
+                    height: min(90vh, 700px);
                     max-width: 100vw;
-                    max-height: 80vh;
+                    max-height: 100vh;
                     background: repeating-linear-gradient(90deg, #d6e5b1 0 8%, #c8d6a3 8% 16%),
                                 repeating-linear-gradient(0deg, #d6e5b1 0 8%, #c8d6a3 8% 16%);
                     background-size: 60px 60px;
