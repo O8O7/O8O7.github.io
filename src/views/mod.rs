@@ -16,3 +16,8 @@ pub use blog::Blog;
 
 mod navbar;
 pub use navbar::Navbar;
+
+pub mod blog_list;
+pub use blog_list::BlogList;
+
+use pulldown_cmark::HeadingLevel;
