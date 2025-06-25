@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use dioxus::events::keyboard_types::Key;
 use web_sys::window;
 use gloo_events::EventListener;
+use web_sys::wasm_bindgen::JsCast;
 use crate::components::controller::Controller;
 use crate::components::cat::Cat;
 
@@ -26,20 +27,41 @@ pub fn Jiji() -> Element {
         y.set((y() as f64).min(stage_height() - CAT_HEIGHT).max(0.0));
     });
 
-    use_effect(move || {
+    // エリアの幅・高さをDOMから取得してstage_width, stage_heightにセット
+    fn update_stage_size(stage_width: &mut Signal<f64>, stage_height: &mut Signal<f64>) {
+        if let Some(window) = web_sys::window() {
+            if let Some(document) = window.document() {
+                if let Some(area) = document.get_element_by_id("jiji-area") {
+                    if let Some(el) = area.dyn_ref::<web_sys::HtmlElement>() {
+                        let width = el.offset_width() as f64;
+                        let height = el.offset_height() as f64;
+                        stage_width.set(width);
+                        stage_height.set(height);
+                    }
+                }
+            }
+        }
+    }
+
+    use_future({
         let mut stage_width = stage_width.clone();
         let mut stage_height = stage_height.clone();
-        let mut x = x.clone();
-        let mut y = y.clone();
-        let listener = EventListener::new(&window().unwrap(), "resize", move |_event| {
-            let w = window().unwrap().inner_width().unwrap().as_f64().unwrap_or(1000.0);
-            let h = window().unwrap().inner_height().unwrap().as_f64().unwrap_or(600.0) - 100.0;
-            stage_width.set(w.max(CAT_WIDTH + 20.0));
-            stage_height.set(h.max(CAT_HEIGHT + 20.0));
-            x.set((x() as f64).min(stage_width() - CAT_WIDTH).max(0.0));
-            y.set((y() as f64).min(stage_height() - CAT_HEIGHT).max(0.0));
-        });
-        (move || drop(listener))()
+        move || async move {
+            update_stage_size(&mut stage_width, &mut stage_height);
+        }
+    });
+
+    use_effect({
+        let mut stage_width = stage_width.clone();
+        let mut stage_height = stage_height.clone();
+        move || {
+            let mut stage_width = stage_width.clone();
+            let mut stage_height = stage_height.clone();
+            let listener = EventListener::new(&window().unwrap(), "resize", move |_event| {
+                update_stage_size(&mut stage_width, &mut stage_height);
+            });
+            (move || drop(listener))()
+        }
     });
 
     let on_keydown = move |evt: KeyboardEvent| {
@@ -93,13 +115,15 @@ pub fn Jiji() -> Element {
 
     rsx! {
         div {
+            id: "jiji-area",
             style: {
-                format!("
+                format!(
+                    "
                     position: relative;
                     width: min(100vw, 600px);
-                    height: min(70vw, 400px);
+                    height: min(calc(100vw * 0.7), 500px);
                     max-width: 100vw;
-                    max-height: 70vw;
+                    max-height: 80vh;
                     background: repeating-linear-gradient(90deg, #d6e5b1 0 8%, #c8d6a3 8% 16%),
                                 repeating-linear-gradient(0deg, #d6e5b1 0 8%, #c8d6a3 8% 16%);
                     background-size: 60px 60px;
@@ -113,7 +137,8 @@ pub fn Jiji() -> Element {
                     justify-content: center;
                     align-items: center;
                     overflow: hidden;
-                ")
+                    "
+                )
             },
             tabindex: 0,
             onkeydown: on_keydown,
