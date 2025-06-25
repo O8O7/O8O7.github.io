@@ -159,9 +159,9 @@ pub fn Jiji() -> Element {
             if show_intro() {
                 div {
                     style: {format!("position: absolute; left: {}px; bottom: {}px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; padding: 0.5rem 1rem; min-width: 180px; z-index: 10; box-shadow: 2px 2px 8px #888; font-family: 'serif';", x(), y() + CAT_HEIGHT + 10.0)},
-                    b { "ジジ（猫）" }
+                    b { "猫です" }
                     br {}
-                    span { "こんにちは！ぼくはジジ。RPGとプログラミングが大好きな黒猫です。よろしくね！" }
+                    span { "Rust勉強中!" }
                 }
             }
             // 木の柱風の四隅装飾

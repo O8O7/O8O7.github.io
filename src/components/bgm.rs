@@ -7,26 +7,26 @@ static mut BGM_LOOP: Option<Interval> = None;
 
 pub fn play_bgm() {
     let ctx = AudioContext::new().unwrap();
-    // 3音のアルペジオをループ再生する例
-    let notes = [261.63, 329.63, 392.00]; // C, E, G
+    let notes = [196.00, 220.00, 246.94, 261.63, 293.66]; // G3, A3, B3, C4, D4
     for (i, &freq) in notes.iter().enumerate() {
         let osc = ctx.create_oscillator().unwrap();
-        Reflect::set(osc.as_ref(), &"type".into(), &"sine".into()).unwrap();
+        Reflect::set(osc.as_ref(), &"type".into(), &"triangle".into()).unwrap();
         osc.frequency().set_value(freq as f32);
-        osc.connect_with_audio_node(&ctx.destination()).unwrap();
-        let t = ctx.current_time() + i as f64 * 0.3;
+        let gain = ctx.create_gain().unwrap();
+        gain.gain().set_value(0.13);
+        osc.connect_with_audio_node(&gain).unwrap();
+        gain.connect_with_audio_node(&ctx.destination()).unwrap();
+        let t = ctx.current_time() + i as f64 * 0.45;
         osc.start_with_when(t).unwrap();
-        osc.stop_with_when(t + 0.25).unwrap();
+        osc.stop_with_when(t + 0.4).unwrap();
     }
-    // ループ再生はsetTimeout/Intervalやwasm-timerで再帰的に呼ぶのが本格的ですが、
-    // ここでは1回だけ鳴らす簡易例です。
 }
 
 pub fn start_bgm_loop() {
     unsafe {
         if BGM_LOOP.is_none() {
             play_bgm();
-            BGM_LOOP = Some(Interval::new(900, || play_bgm()));
+            BGM_LOOP = Some(Interval::new(2300, || play_bgm()));
         }
     }
 }
@@ -58,7 +58,6 @@ pub fn BgmController() -> Element {
             title: if playing() { "BGM停止" } else { "BGM再生" },
             aria_label: "BGM再生/停止",
             if playing() {
-                // 再生中は音符が揺れるアニメーション
                 span { class: "animate-bounce", "♪" }
             } else {
                 span { "♪" }
