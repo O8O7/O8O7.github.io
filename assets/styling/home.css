@@ -1,0 +1,449 @@
+/* ===== FIELD ===== */
+.jiji-field {
+  position: relative;
+  width: calc(100vw - 40px);
+  max-width: 900px;
+  height: min(72vh, 560px);
+  outline: none;
+  border-radius: 4px;
+  overflow: hidden;
+  box-sizing: border-box;
+  cursor: default;
+
+  background-color: #3c7a1a;
+  background-image:
+    linear-gradient(45deg, rgba(0,0,0,0.10) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(0,0,0,0.10) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.10) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.10) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+
+  border: 5px solid #6b3818;
+  box-shadow:
+    0 0 0 2px #3e1e08,
+    0 0 0 5px #9b6234,
+    inset 0 0 0 2px #8b5025,
+    0 8px 40px rgba(0,0,0,0.55);
+}
+
+/* ===== NAMEPLATE ===== */
+.jiji-nameplate {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  background: rgba(0,0,0,0.72);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 3px;
+  padding: 6px 10px;
+  pointer-events: none;
+  user-select: none;
+}
+.jiji-nameplate-name {
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: #ffe080;
+  letter-spacing: 0.06em;
+}
+.jiji-nameplate-sub {
+  font-size: 0.6rem;
+  color: #999;
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+/* ===== CORNERS ===== */
+.jiji-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #3e1e08;
+  z-index: 6;
+}
+.jiji-corner-tl { top: 0; left: 0; border-radius: 0 0 50% 0; }
+.jiji-corner-tr { top: 0; right: 0; border-radius: 0 0 0 50%; }
+.jiji-corner-bl { bottom: 0; left: 0; border-radius: 0 50% 0 0; }
+.jiji-corner-br { bottom: 0; right: 0; border-radius: 50% 0 0 0; }
+
+/* ===== DIALOG ===== */
+.jiji-dialog-wrap {
+  width: calc(100vw - 40px);
+  max-width: 900px;
+}
+.jiji-dialog {
+  background: #050518;
+  border: 2px solid #c8c8d8;
+  border-top: none;
+  box-shadow: inset 0 0 0 2px #1a1a3a, 0 6px 20px rgba(0,0,0,0.5);
+  padding: 14px 18px 12px;
+}
+.jiji-dialog-name {
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: #7dd3fc;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(125,211,252,0.25);
+}
+.jiji-dialog-text {
+  font-size: 0.9rem;
+  color: #f0f0f0;
+  font-family: 'Courier New', monospace;
+  line-height: 1.9;
+  min-height: 1.9em;
+}
+.jiji-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 0.9em;
+  background: #f0f0f0;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: jiji-cursor-blink 0.8s step-end infinite;
+}
+@keyframes jiji-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.jiji-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 10px;
+}
+.jiji-dialog-next {
+  font-size: 0.72rem;
+  color: #7dd3fc;
+  background: transparent;
+  border: 1px solid rgba(125,211,252,0.4);
+  border-radius: 2px;
+  padding: 3px 14px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.08em;
+  transition: background 0.15s;
+}
+.jiji-dialog-next:hover { background: rgba(125,211,252,0.1); }
+.jiji-dialog-done {
+  font-size: 0.68rem;
+  color: #555;
+  font-family: monospace;
+  letter-spacing: 0.1em;
+}
+
+/* ===== D-PAD ===== */
+.dpad {
+  position: fixed;
+  left: 1.2rem;
+  bottom: 1.2rem;
+  width: 120px;
+  height: 120px;
+  z-index: 50;
+}
+.dpad-btn {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(160deg, #2a3347 0%, #171f2e 100%);
+  border: 1px solid #3d4f6a;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 0 #0d1117, 0 3px 8px rgba(0,0,0,0.4);
+  transition: box-shadow 0.07s, transform 0.07s, color 0.1s;
+}
+.dpad-btn:hover { color: #cbd5e1; }
+.dpad-btn:active {
+  box-shadow: 0 1px 0 #0d1117;
+  transform: translateY(2px);
+  color: #e2e8f0;
+}
+.dpad-up    { top: 0;    left: 40px; border-radius: 6px 6px 0 0; }
+.dpad-down  { top: 80px; left: 40px; border-radius: 0 0 6px 6px; }
+.dpad-left  { top: 40px; left: 0;    border-radius: 6px 0 0 6px; }
+.dpad-right { top: 40px; left: 80px; border-radius: 0 6px 6px 0; }
+.dpad-center {
+  position: absolute;
+  top: 40px; left: 40px;
+  width: 40px; height: 40px;
+  background: #0f1724;
+  border: 1px solid #2d3748;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.dpad-center-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #2d3748;
+}
+
+/* ===== BOOK OBJECTS IN FIELD ===== */
+.book-obj {
+  position: absolute;
+  cursor: pointer;
+  z-index: 3;
+  transition: filter 0.2s, transform 0.2s;
+}
+.book-obj:hover {
+  filter: brightness(1.25) drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  transform: translateY(-3px);
+}
+
+.book-badge {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #111;
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  animation: badge-float 0.7s ease-in-out infinite alternate;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.book-badge::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #fff;
+}
+@keyframes badge-float {
+  from { transform: translateX(-50%) translateY(0); }
+  to   { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* ===== BOOK MODAL OVERLAY ===== */
+.book-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: overlay-in 0.25s ease;
+}
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.book-modal {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  filter: drop-shadow(0 24px 64px rgba(0,0,0,0.8));
+}
+
+.book-page {
+  width: clamp(160px, 38vw, 260px);
+  height: clamp(280px, 55vh, 380px);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.2rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.8rem);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.book-page-left {
+  transform-origin: right center;
+  animation: page-open-left 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes page-open-left {
+  from { transform: rotateY(-80deg); }
+  to   { transform: rotateY(0deg); }
+}
+
+.book-page-right {
+  transform-origin: left center;
+  animation: page-open-right 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.05s both;
+}
+@keyframes page-open-right {
+  from { transform: rotateY(80deg); }
+  to   { transform: rotateY(0deg); }
+}
+
+/* ===== BLOG BOOK ===== */
+.book-blog .book-page {
+  background: #f4e8cc;
+  color: #2a1f0e;
+}
+.book-blog .book-page-left {
+  border-right: 4px solid #a07820;
+  box-shadow: inset -10px 0 20px rgba(0,0,0,0.1);
+}
+.book-blog .book-page-right {
+  box-shadow: inset 10px 0 20px rgba(0,0,0,0.08);
+}
+
+.book-blog-title {
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: bold;
+  letter-spacing: 0.18em;
+  color: #3a2a08;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  font-family: Georgia, serif;
+}
+.book-blog-author {
+  font-size: 0.65rem;
+  text-align: center;
+  color: #8a6a30;
+  letter-spacing: 0.12em;
+  font-family: Georgia, serif;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #c8a840;
+}
+.book-ruled-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+.book-ruled-line {
+  height: 1px;
+  background: rgba(180,140,60,0.45);
+}
+
+.book-right-section {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: #8a7040;
+  font-family: Georgia, serif;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+}
+.book-right-desc {
+  font-size: clamp(0.75rem, 1.8vw, 0.85rem);
+  line-height: 1.85;
+  color: #4a3a18;
+  font-family: Georgia, serif;
+  flex: 1;
+}
+.book-nav-btn {
+  display: block;
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  border-radius: 2px;
+  text-decoration: none;
+  font-family: Georgia, serif;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.book-nav-blog {
+  background: #3a5cb8;
+  color: #fff;
+  box-shadow: 0 2px 0 #243898;
+}
+.book-nav-blog:hover { background: #2a4ca8; }
+
+/* ===== HORROR TOME ===== */
+.book-horror .book-page-left {
+  background: #0d0500;
+  color: #9a7060;
+  border-right: 4px solid #5a0a0a;
+  box-shadow: inset -10px 0 20px rgba(0,0,0,0.3);
+}
+.book-horror .book-page-right {
+  background: #0f0602;
+  color: #9a7060;
+  box-shadow: inset 10px 0 20px rgba(0,0,0,0.3);
+}
+
+.book-horror-title {
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: bold;
+  letter-spacing: 0.3em;
+  color: #cc2020;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  font-family: Georgia, serif;
+  text-shadow: 0 0 18px rgba(200,20,20,0.35);
+}
+.book-horror-sub {
+  font-size: 0.62rem;
+  text-align: center;
+  color: #5a3020;
+  letter-spacing: 0.12em;
+  font-family: Georgia, serif;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #3a0808;
+}
+.book-horror-symbol {
+  text-align: center;
+  color: #5a0a0a;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.book-horror-eye {
+  width: 56px;
+  height: 56px;
+}
+
+.book-horror-right-section {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: #5a2010;
+  font-family: Georgia, serif;
+  margin-bottom: 0.8rem;
+}
+.book-horror-right-desc {
+  font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+  line-height: 1.9;
+  color: #7a5040;
+  font-family: Georgia, serif;
+  flex: 1;
+}
+.book-nav-horror {
+  background: #5a0a0a;
+  color: #d0a090;
+  box-shadow: 0 2px 0 #3a0505;
+}
+.book-nav-horror:hover { background: #6a1010; color: #e0b0a0; }
+
+/* ===== CLOSE BUTTON ===== */
+.book-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2a2a3a;
+  color: #ccc;
+  border: 1px solid #4a4a5a;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 10;
+}
+.book-close:hover { background: #4a4a5a; color: #fff; }

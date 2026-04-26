@@ -19,10 +19,6 @@ pub fn Navbar() -> Element {
                 to: Route::Home {},
                 "Home"
             }
-            Link {
-                to: Route::BlogList,
-                "Blog"
-            }
         }
 
         // The `Outlet` component is used to render the next component inside the layout. In this case, it will render either

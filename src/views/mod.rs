@@ -20,4 +20,10 @@ pub use navbar::Navbar;
 pub mod blog_list;
 pub use blog_list::BlogList;
 
+pub mod horror_list;
+pub use horror_list::HorrorList;
+
+pub mod horror;
+pub use horror::Horror;
+
 use pulldown_cmark::HeadingLevel;

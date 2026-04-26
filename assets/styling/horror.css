@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap');
+
+:root {
+  --horror-bg: #0a0000;
+  --horror-surface: #110000;
+  --horror-border: #3a0a0a;
+  --horror-accent: #8b0000;
+  --horror-accent-light: #cc2020;
+  --horror-text: #c8b8b8;
+  --horror-text-dim: #7a6060;
+  --horror-red: #cc2020;
+}
+
+.horror-page {
+  min-height: 100vh;
+  background-color: var(--horror-bg);
+  background-image:
+    radial-gradient(ellipse at top, #1a0000 0%, transparent 60%),
+    radial-gradient(ellipse at bottom, #0d0000 0%, transparent 60%);
+  color: var(--horror-text);
+  font-family: 'Noto Serif JP', 'Georgia', serif;
+}
+
+/* ---- List page ---- */
+
+.horror-list-header {
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+}
+
+.horror-list-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--horror-accent-light);
+  text-shadow: 0 0 30px rgba(200, 0, 0, 0.4), 0 2px 8px #000;
+  margin-bottom: 0.6rem;
+}
+
+.horror-list-subtitle {
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: var(--horror-text-dim);
+}
+
+.horror-list-divider {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--horror-accent), transparent);
+  margin: 1.5rem auto;
+}
+
+.horror-grid {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.horror-card {
+  display: block;
+  background: var(--horror-surface);
+  border: 1px solid var(--horror-border);
+  border-radius: 4px;
+  padding: 1.8rem 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.horror-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--horror-accent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.horror-card:hover {
+  border-color: var(--horror-accent);
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.2), inset 0 0 40px rgba(139, 0, 0, 0.04);
+  background: #150000;
+}
+
+.horror-card:hover::before {
+  opacity: 1;
+}
+
+.horror-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #e0c8c8;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.05em;
+  transition: color 0.3s;
+}
+
+.horror-card:hover .horror-card-title {
+  color: var(--horror-accent-light);
+}
+
+.horror-card-excerpt {
+  font-size: 0.9rem;
+  color: var(--horror-text-dim);
+  line-height: 1.8;
+}
+
+.horror-card-date {
+  font-size: 0.75rem;
+  color: #5a3a3a;
+  margin-top: 1rem;
+  letter-spacing: 0.1em;
+}
+
+/* ---- Detail page ---- */
+
+.horror-detail {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+.horror-detail-meta {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.horror-detail-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e0c8c8;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  margin-bottom: 0.8rem;
+}
+
+.horror-detail-date {
+  font-size: 0.8rem;
+  color: var(--horror-text-dim);
+  letter-spacing: 0.12em;
+}
+
+.horror-detail-divider {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--horror-accent), transparent);
+  margin: 1.5rem auto;
+}
+
+.horror-body {
+  font-size: 1.05rem;
+  line-height: 2.2;
+  color: var(--horror-text);
+}
+
+.horror-body p {
+  margin-bottom: 1.6em;
+}
+
+.horror-body h2 {
+  font-size: 1.2rem;
+  color: var(--horror-accent-light);
+  margin: 2.5rem 0 1rem;
+  letter-spacing: 0.08em;
+}
+
+.horror-back {
+  display: inline-block;
+  margin-top: 3rem;
+  font-size: 0.85rem;
+  color: var(--horror-text-dim);
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  border-bottom: 1px solid var(--horror-border);
+  padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.horror-back:hover {
+  color: var(--horror-accent-light);
+  border-color: var(--horror-accent-light);
+}

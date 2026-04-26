@@ -2,7 +2,7 @@
 // need dioxus
 use dioxus::prelude::*;
 
-use views::{Blog, Home, Navbar, BlogList};
+use views::{Blog, Home, Navbar, BlogList, HorrorList, Horror};
 
 /// Define a components module that contains all shared components for our app.
 mod components;
@@ -30,6 +30,10 @@ enum Route {
         BlogList,
         #[route("/blog/:id")]
         Blog { id: i32 },
+        #[route("/horror")]
+        HorrorList,
+        #[route("/horror/:id")]
+        Horror { id: i32 },
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.

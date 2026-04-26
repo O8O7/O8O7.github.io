@@ -7,51 +7,38 @@ use crate::components::controller::Controller;
 use crate::components::cat::Cat;
 use crate::components::bgm::BgmController;
 use crate::components::bgm::play_talk_sound;
+use crate::Route;
 
-const CAT_WIDTH: f64 = 80.0;
-const CAT_HEIGHT: f64 = 80.0;
+const CAT_W: f64 = 64.0;
+const CAT_H: f64 = 64.0;
+const HOME_CSS: Asset = asset!("/assets/styling/home.css");
 
 #[component]
 pub fn Jiji() -> Element {
-    let mut stage_width = use_signal(|| 1000.0);
-    let mut stage_height = use_signal(|| 600.0);
-    let mut x = use_signal(|| 460.0); // (1000-80)/2
-    let mut y = use_signal(|| 260.0); // (600-80)/2
+    let mut stage_w = use_signal(|| 900.0_f64);
+    let mut stage_h = use_signal(|| 560.0_f64);
+    let mut x = use_signal(|| 418.0_f64);
+    let mut y = use_signal(|| 248.0_f64);
     let mut dir = use_signal(|| true);
-    let mut show_intro = use_signal(|| false);
+    let mut show_dialog = use_signal(|| false);
+    let mut open_book: Signal<Option<&'static str>> = use_signal(|| None);
 
-    // RPG風メッセージ配列
-    let messages = [
-        "こんにちは！",
-        "タップしてくれてありがとう。",
-        "Rust勉強中です。",
-        "よろしくね！"
-    ];
-    let mut msg_idx = use_signal(|| 0);
-    let mut char_count = use_signal(|| 0);
-    let mut typing = use_signal(|| true);
+    let messages = ["こんにちは！", "タップしてくれてありがとう。", "Rust 勉強中だよ。", "よろしくね！"];
+    let mut msg_idx    = use_signal(|| 0_usize);
+    let mut char_count = use_signal(|| 0_usize);
+    let mut typing     = use_signal(|| true);
 
-    use_future(move || async move {
-        let w = window().unwrap().inner_width().unwrap().as_f64().unwrap_or(1000.0);
-        let h = window().unwrap().inner_height().unwrap().as_f64().unwrap_or(600.0) - 100.0;
-        stage_width.set(w.max(CAT_WIDTH + 20.0));
-        stage_height.set(h.max(CAT_HEIGHT + 20.0));
-        x.set((x() as f64).min(stage_width() - CAT_WIDTH).max(0.0));
-        y.set((y() as f64).min(stage_height() - CAT_HEIGHT).max(0.0));
-    });
-
-    // エリアの幅・高さをDOMから取得してstage_width, stage_heightにセット
-    fn update_stage_size(stage_width: &mut Signal<f64>, stage_height: &mut Signal<f64>, x: &mut Signal<f64>, y: &mut Signal<f64>) {
-        if let Some(window) = web_sys::window() {
-            if let Some(document) = window.document() {
-                if let Some(area) = document.get_element_by_id("jiji-area") {
-                    if let Some(el) = area.dyn_ref::<web_sys::HtmlElement>() {
-                        let width = el.offset_width() as f64;
-                        let height = el.offset_height() as f64;
-                        stage_width.set(width);
-                        stage_height.set(height);
-                        x.set((width - CAT_WIDTH) / 2.0);
-                        y.set((height - CAT_HEIGHT) / 2.0);
+    fn sync_stage(sw: &mut Signal<f64>, sh: &mut Signal<f64>, x: &mut Signal<f64>, y: &mut Signal<f64>) {
+        if let Some(win) = web_sys::window() {
+            if let Some(doc) = win.document() {
+                if let Some(el) = doc.get_element_by_id("jiji-area") {
+                    if let Some(el) = el.dyn_ref::<web_sys::HtmlElement>() {
+                        let w = el.offset_width() as f64;
+                        let h = el.offset_height() as f64;
+                        sw.set(w);
+                        sh.set(h);
+                        x.set(((w - CAT_W) / 2.0).max(0.0));
+                        y.set(((h - CAT_H) / 2.0).max(0.0));
                     }
                 }
             }
@@ -59,49 +46,38 @@ pub fn Jiji() -> Element {
     }
 
     use_future({
-        let mut stage_width = stage_width.clone();
-        let mut stage_height = stage_height.clone();
-        let mut x = x.clone();
-        let mut y = y.clone();
-        move || async move {
-            update_stage_size(&mut stage_width, &mut stage_height, &mut x, &mut y);
-        }
+        let mut sw = stage_w.clone(); let mut sh = stage_h.clone();
+        let mut x = x.clone();       let mut y = y.clone();
+        move || async move { sync_stage(&mut sw, &mut sh, &mut x, &mut y); }
     });
 
     use_effect({
-        let mut stage_width = stage_width.clone();
-        let mut stage_height = stage_height.clone();
-        let mut x = x.clone();
-        let mut y = y.clone();
+        let mut sw = stage_w.clone(); let mut sh = stage_h.clone();
+        let mut x = x.clone();       let mut y = y.clone();
         move || {
-            let mut stage_width = stage_width.clone();
-            let mut stage_height = stage_height.clone();
-            let mut x = x.clone();
-            let mut y = y.clone();
-            let listener = EventListener::new(&window().unwrap(), "resize", move |_event| {
-                update_stage_size(&mut stage_width, &mut stage_height, &mut x, &mut y);
+            let mut sw = sw.clone(); let mut sh = sh.clone();
+            let mut x = x.clone();  let mut y = y.clone();
+            let _l = EventListener::new(&window().unwrap(), "resize", move |_| {
+                sync_stage(&mut sw, &mut sh, &mut x, &mut y);
             });
-            (move || drop(listener))()
         }
     });
 
-    // 1文字ずつ表示＋ピコ音
     use_effect({
-        let msg_idx = msg_idx.clone();
+        let msg_idx    = msg_idx.clone();
         let char_count = char_count.clone();
-        let typing = typing.clone();
+        let typing     = typing.clone();
         move || {
             if typing() {
                 let msg = messages[msg_idx()];
                 if char_count() < msg.chars().count() {
-                    let mut char_count = char_count.clone();
-                    let mut typing = typing.clone();
-                    gloo_timers::callback::Timeout::new(40, move || {
+                    let mut cc = char_count.clone();
+                    let mut tp = typing.clone();
+                    gloo_timers::callback::Timeout::new(42, move || {
                         play_talk_sound();
-                        char_count.set(char_count() + 1);
-                        if char_count() + 1 >= msg.chars().count() {
-                            typing.set(false);
-                        }
+                        let next = cc() + 1;
+                        cc.set(next);
+                        if next >= msg.chars().count() { tp.set(false); }
                     }).forget();
                 }
             }
@@ -110,126 +86,265 @@ pub fn Jiji() -> Element {
 
     let on_keydown = move |evt: KeyboardEvent| {
         match evt.key() {
-            Key::ArrowLeft => {
-                dir.set(false);
-                let new_x = (x() - 20.0_f64).max(0.0_f64);
-                x.set(new_x);
-            }
-            Key::ArrowRight => {
-                dir.set(true);
-                let new_x = (x() + 20.0_f64).min(stage_width() - CAT_WIDTH);
-                x.set(new_x);
-            }
-            Key::ArrowUp => {
-                let new_y = (y() + 20.0_f64).min(stage_height() - CAT_HEIGHT);
-                y.set(new_y);
-            }
-            Key::ArrowDown => {
-                let new_y = (y() - 20.0_f64).max(0.0_f64);
-                y.set(new_y);
-            }
+            Key::ArrowLeft  => { dir.set(false); x.set((x() - 20.0).max(0.0)); }
+            Key::ArrowRight => { dir.set(true);  x.set((x() + 20.0).min(stage_w() - CAT_W)); }
+            Key::ArrowUp    => { y.set((y() + 20.0).min(stage_h() - CAT_H)); }
+            Key::ArrowDown  => { y.set((y() - 20.0).max(0.0)); }
             _ => {}
         }
     };
 
-    // move_jijiはEventHandlerでラップ
-    let move_jiji = move |direction: &'static str| {
-        match direction {
-            "left" => {
-                dir.set(false);
-                let new_x = (x() - 20.0_f64).max(0.0_f64);
-                x.set(new_x);
-            }
-            "right" => {
-                dir.set(true);
-                let new_x = (x() + 20.0_f64).min(stage_width() - CAT_WIDTH);
-                x.set(new_x);
-            }
-            "up" => {
-                let new_y = (y() + 20.0_f64).min(stage_height() - CAT_HEIGHT);
-                y.set(new_y);
-            }
-            "down" => {
-                let new_y = (y() - 20.0_f64).max(0.0_f64);
-                y.set(new_y);
-            }
+    let move_jiji = move |d: &'static str| {
+        match d {
+            "left"  => { dir.set(false); x.set((x() - 20.0).max(0.0)); }
+            "right" => { dir.set(true);  x.set((x() + 20.0).min(stage_w() - CAT_W)); }
+            "up"    => { y.set((y() + 20.0).min(stage_h() - CAT_H)); }
+            "down"  => { y.set((y() - 20.0).max(0.0)); }
             _ => {}
         }
     };
 
-    // 吹き出し用メッセージを事前に用意
-    let (msg, shown) = if show_intro() {
-        let msg = messages[msg_idx()];
-        let shown = msg.chars().take(char_count()).collect::<String>();
-        (Some(msg), Some(shown))
+    // Book object positions (responsive to stage size)
+    let blog_obj_x  = (stage_w() * 0.16) as i32;
+    let blog_obj_y  = (stage_h() * 0.48) as i32;
+    let horror_obj_x = (stage_w() * 0.70) as i32;
+    let horror_obj_y = (stage_h() * 0.36) as i32;
+
+    // Proximity detection (cat center vs book center)
+    let cat_cx = x() + CAT_W / 2.0;
+    let cat_cy = y() + CAT_H / 2.0;
+    let near_blog = {
+        let dx = cat_cx - (blog_obj_x as f64 + 24.0);
+        let dy = cat_cy - (blog_obj_y as f64 + 32.0);
+        (dx * dx + dy * dy).sqrt() < 90.0
+    };
+    let near_horror = {
+        let dx = cat_cx - (horror_obj_x as f64 + 24.0);
+        let dy = cat_cy - (horror_obj_y as f64 + 32.0);
+        (dx * dx + dy * dy).sqrt() < 90.0
+    };
+
+    let shown: String = if show_dialog() {
+        messages[msg_idx()].chars().take(char_count()).collect()
     } else {
-        (None, None)
+        String::new()
     };
 
     rsx! {
+        document::Link { rel: "stylesheet", href: HOME_CSS }
+
         div {
-            id: "jiji-area",
-            style: {
-                format!(
-                    "
-                    position: relative;
-                    width: calc(100vw - 32px);
-                    height: min(90vh, 700px);
-                    max-width: 100vw;
-                    max-height: 100vh;
-                    background: repeating-linear-gradient(90deg, #d6e5b1 0 8%, #c8d6a3 8% 16%),
-                                repeating-linear-gradient(0deg, #d6e5b1 0 8%, #c8d6a3 8% 16%);
-                    background-size: 60px 60px;
-                    border: 12px solid #8b5c2a;
-                    border-radius: 2rem;
-                    box-shadow: 0 0 0 8px #e7d7b1, 0 4px 24px #0004;
-                    margin: 2rem auto;
-                    box-sizing: border-box;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    overflow: hidden;
-                    "
-                )
-            },
-            tabindex: 0,
-            onkeydown: on_keydown,
+            style: "display:flex;flex-direction:column;align-items:center;",
+
+            // ===== FIELD =====
             div {
-                style: {format!("position: absolute; left: {}px; bottom: {}px; width: {}px; height: {}px; cursor: pointer; z-index: 2;", x(), y(), CAT_WIDTH, CAT_HEIGHT)},
-                onclick: move |_| show_intro.set(!show_intro()),
-                Cat { dir: dir() }
-            }
-            if show_intro() {
+                id: "jiji-area",
+                class: "jiji-field",
+                tabindex: 0,
+                onkeydown: on_keydown,
+
+                // --- Cat ---
                 div {
-                    style: {format!("position: absolute; left: {}px; bottom: {}px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; padding: 0.5rem 1rem; min-width: 180px; z-index: 10; box-shadow: 2px 2px 8px #888; font-family: 'serif';", x(), y() + CAT_HEIGHT + 10.0)},
-                    b { "ジジ（猫）" }
-                    br {}
-                    span { dangerous_inner_html: shown.as_deref().unwrap_or("") }
-                    if !typing() {
-                        if msg_idx() < messages.len() - 1 {
-                            button {
-                                class: "ml-4 px-2 py-1 rounded bg-indigo-200 text-indigo-900 text-sm font-bold border border-indigo-400 hover:bg-indigo-300 transition-all",
-                                onclick: move |_| {
-                                    msg_idx.set(msg_idx() + 1);
-                                    char_count.set(0);
-                                    typing.set(true);
-                                },
-                                "▶ 次へ"
-                            }
+                    style: "position:absolute;left:{x()}px;bottom:{y()}px;width:{CAT_W}px;height:{CAT_H}px;cursor:pointer;z-index:2;",
+                    onclick: move |_| {
+                        if !show_dialog() {
+                            show_dialog.set(true);
+                            msg_idx.set(0);
+                            char_count.set(0);
+                            typing.set(true);
                         } else {
-                            span { class: "ml-4 text-gray-500 text-xs", "（おわり）" }
+                            show_dialog.set(false);
+                        }
+                    },
+                    Cat { dir: dir() }
+                }
+
+                // --- Blog book object ---
+                div {
+                    class: "book-obj",
+                    style: "left:{blog_obj_x}px;bottom:{blog_obj_y}px;",
+                    onclick: move |_| open_book.set(Some("blog")),
+                    if near_blog {
+                        div { class: "book-badge", "📖 開く" }
+                    }
+                    svg {
+                        width: "48", height: "64",
+                        view_box: "0 0 48 64",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        rect { x: "2", y: "1", width: "44", height: "62", rx: "2", fill: "#3a5cb8" }
+                        rect { x: "2", y: "1", width: "7",  height: "62", rx: "2", fill: "#243d8a" }
+                        rect { x: "44", y: "4", width: "2", height: "56", rx: "1", fill: "#ddd8b0" }
+                        rect { x: "12", y: "22", width: "24", height: "2.5", rx: "1", fill: "#8090d8", opacity: "0.75" }
+                        rect { x: "16", y: "28", width: "16", height: "2.5", rx: "1", fill: "#8090d8", opacity: "0.75" }
+                        rect { x: "12", y: "34", width: "22", height: "2.5", rx: "1", fill: "#8090d8", opacity: "0.75" }
+                        rect { x: "16", y: "40", width: "10", height: "2.5", rx: "1", fill: "#8090d8", opacity: "0.5" }
+                        rect { x: "30", y: "0",  width: "8",  height: "14", fill: "#e8c040" }
+                        polygon { points: "30,14 34,19 38,14", fill: "#e8c040" }
+                        rect { x: "9",  y: "3",  width: "3",  height: "58", fill: "rgba(255,255,255,0.07)" }
+                    }
+                }
+
+                // --- Horror tome object ---
+                div {
+                    class: "book-obj",
+                    style: "left:{horror_obj_x}px;bottom:{horror_obj_y}px;",
+                    onclick: move |_| open_book.set(Some("horror")),
+                    if near_horror {
+                        div { class: "book-badge", "👁 開く" }
+                    }
+                    svg {
+                        width: "48", height: "64",
+                        view_box: "0 0 48 64",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        rect { x: "2", y: "1", width: "44", height: "62", rx: "2", fill: "#1a0a05" }
+                        rect { x: "2", y: "1", width: "7",  height: "62", rx: "2", fill: "#0d0502" }
+                        rect { x: "9", y: "1", width: "37", height: "62",           fill: "#1f0d06" }
+                        rect { x: "11", y: "8",  width: "25", height: "47", rx: "1",
+                               fill: "none", stroke: "#3a0808", stroke_width: "1" }
+                        rect { x: "8",  y: "4",  width: "5", height: "5", rx: "1", fill: "#3a1a0a" }
+                        rect { x: "34", y: "4",  width: "5", height: "5", rx: "1", fill: "#3a1a0a" }
+                        rect { x: "8",  y: "54", width: "5", height: "5", rx: "1", fill: "#3a1a0a" }
+                        rect { x: "34", y: "54", width: "5", height: "5", rx: "1", fill: "#3a1a0a" }
+                        ellipse { cx: "24", cy: "32", rx: "8",   ry: "5",   fill: "none",    stroke: "#7a1010", stroke_width: "1.2" }
+                        ellipse { cx: "24", cy: "32", rx: "3.5", ry: "3.5", fill: "#7a1010" }
+                        circle  { cx: "24", cy: "32", r:  "1.5", fill: "#cc2020" }
+                        line { x1: "15", y1: "32", x2: "13", y2: "32", stroke: "#5a0808", stroke_width: "1" }
+                        line { x1: "33", y1: "32", x2: "35", y2: "32", stroke: "#5a0808", stroke_width: "1" }
+                        line { x1: "24", y1: "25", x2: "24", y2: "23", stroke: "#5a0808", stroke_width: "1" }
+                        line { x1: "24", y1: "39", x2: "24", y2: "41", stroke: "#5a0808", stroke_width: "1" }
+                    }
+                }
+
+                // --- Nameplate ---
+                div { class: "jiji-nameplate",
+                    div { class: "jiji-nameplate-name", "Sakamoto Shun" }
+                    div { class: "jiji-nameplate-sub",  "Rust / WASM" }
+                }
+
+                // --- Corner decorations ---
+                div { class: "jiji-corner jiji-corner-tl" }
+                div { class: "jiji-corner jiji-corner-tr" }
+                div { class: "jiji-corner jiji-corner-bl" }
+                div { class: "jiji-corner jiji-corner-br" }
+
+                BgmController {}
+            }
+
+            // ===== CAT DIALOG (below field) =====
+            if show_dialog() {
+                div { class: "jiji-dialog-wrap",
+                    div { class: "jiji-dialog",
+                        div { class: "jiji-dialog-name", "黒猫" }
+                        div { class: "jiji-dialog-text",
+                            "{shown}"
+                            if typing() { span { class: "jiji-cursor" } }
+                        }
+                        div { class: "jiji-dialog-actions",
+                            if !typing() {
+                                if msg_idx() < messages.len() - 1 {
+                                    button {
+                                        class: "jiji-dialog-next",
+                                        onclick: move |_| {
+                                            msg_idx.set(msg_idx() + 1);
+                                            char_count.set(0);
+                                            typing.set(true);
+                                        },
+                                        "▶  次へ"
+                                    }
+                                } else {
+                                    span { class: "jiji-dialog-done", "— END —" }
+                                }
+                            }
                         }
                     }
                 }
             }
-            // 木の柱風の四隅装飾
-            div { style: "position: absolute; left:0; top:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 0 2rem 0; z-index:1;" }
-            div { style: "position: absolute; right:0; top:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 0 0 2rem; z-index:1;" }
-            div { style: "position: absolute; left:0; bottom:0; width:32px; height:32px; background:#8b5c2a; border-radius: 0 2rem 0 0; z-index:1;" }
-            div { style: "position: absolute; right:0; bottom:0; width:32px; height:32px; background:#8b5c2a; border-radius: 2rem 0 0 0; z-index:1;" }
-            Controller { move_jiji: EventHandler::new(move_jiji) }
-            BgmController {}
+        }
+
+        Controller { move_jiji: EventHandler::new(move_jiji) }
+
+        // ===== BOOK MODAL =====
+        if let Some(book) = open_book() {
+            div {
+                class: "book-overlay",
+                onclick: move |_| open_book.set(None),
+                div {
+                    class: if book == "blog" { "book-modal book-blog" } else { "book-modal book-horror" },
+                    onclick: move |e| e.stop_propagation(),
+
+                    // Left page
+                    div { class: "book-page book-page-left",
+                        if book == "blog" {
+                            div { class: "book-blog-title", "TECH BLOG" }
+                            div { class: "book-blog-author", "Sakamoto Shun" }
+                            div { class: "book-ruled-lines",
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                                div { class: "book-ruled-line" }
+                            }
+                        } else {
+                            div { class: "book-horror-title", "怪 談" }
+                            div { class: "book-horror-sub", "眠れなくなる話" }
+                            div { class: "book-horror-symbol",
+                                svg {
+                                    class: "book-horror-eye",
+                                    view_box: "0 0 56 56",
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    ellipse { cx: "28", cy: "28", rx: "22", ry: "14", fill: "none", stroke: "#5a0808", stroke_width: "2" }
+                                    ellipse { cx: "28", cy: "28", rx: "10", ry: "10", fill: "#3a0808" }
+                                    circle  { cx: "28", cy: "28", r:  "4",  fill: "#8b1010" }
+                                    circle  { cx: "28", cy: "28", r:  "1.5", fill: "#cc2020" }
+                                    line { x1: "5",  y1: "28", x2: "1",  y2: "28", stroke: "#5a0808", stroke_width: "1.5" }
+                                    line { x1: "51", y1: "28", x2: "55", y2: "28", stroke: "#5a0808", stroke_width: "1.5" }
+                                    line { x1: "28", y1: "10", x2: "28", y2: "6",  stroke: "#5a0808", stroke_width: "1.5" }
+                                    line { x1: "28", y1: "46", x2: "28", y2: "50", stroke: "#5a0808", stroke_width: "1.5" }
+                                    line { x1: "12", y1: "12", x2: "9",  y2: "9",  stroke: "#5a0808", stroke_width: "1.2" }
+                                    line { x1: "44", y1: "12", x2: "47", y2: "9",  stroke: "#5a0808", stroke_width: "1.2" }
+                                    line { x1: "12", y1: "44", x2: "9",  y2: "47", stroke: "#5a0808", stroke_width: "1.2" }
+                                    line { x1: "44", y1: "44", x2: "47", y2: "47", stroke: "#5a0808", stroke_width: "1.2" }
+                                }
+                            }
+                        }
+                    }
+
+                    // Right page
+                    div { class: "book-page book-page-right",
+                        if book == "blog" {
+                            div { class: "book-right-section", "Contents" }
+                            p { class: "book-right-desc",
+                                "Rust や WebAssembly の学習記録。日々の気づきや実験を書き留めています。"
+                            }
+                            Link {
+                                to: Route::BlogList,
+                                class: "book-nav-btn book-nav-blog",
+                                "→ 記事一覧を見る"
+                            }
+                        } else {
+                            div { class: "book-horror-right-section", "Contents" }
+                            p { class: "book-horror-right-desc",
+                                "読んだら、眠れなくなる。日常のすぐそばに潜む「ありえない何か」を描く怪談集。"
+                            }
+                            Link {
+                                to: Route::HorrorList,
+                                class: "book-nav-btn book-nav-horror",
+                                "→ 怪談を読む"
+                            }
+                        }
+                    }
+
+                    // Close button
+                    button {
+                        class: "book-close",
+                        onclick: move |e| { e.stop_propagation(); open_book.set(None); },
+                        "×"
+                    }
+                }
+            }
         }
     }
-} 
+}
