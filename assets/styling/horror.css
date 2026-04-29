@@ -12,9 +12,7 @@
 }
 
 .horror-page {
-  /* body の margin: 20px を打ち消して画面全体を背景で覆う */
-  margin: -20px;
-  min-height: calc(100vh + 40px);
+  min-height: 100vh;
   background-color: var(--horror-bg);
   background-image:
     radial-gradient(ellipse at top, #1a0000 0%, transparent 60%),

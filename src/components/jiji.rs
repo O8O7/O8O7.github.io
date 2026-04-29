@@ -139,7 +139,7 @@ pub fn Jiji() -> Element {
         document::Link { rel: "stylesheet", href: HOME_CSS }
 
         div {
-            style: "display:flex;flex-direction:column;align-items:center;",
+            style: "display:flex;flex-direction:column;align-items:center;padding:1.25rem 0;",
 
             // ===== FIELD =====
             div {
