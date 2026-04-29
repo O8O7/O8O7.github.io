@@ -37,7 +37,8 @@ pub fn Controller(props: ControllerProps) -> Element {
                 onmouseleave:move |_| stop_repeat(&mut up_timer),
                 ontouchstart:move |e| { e.prevent_default(); start_repeat("up", &mut up_timer); },
                 ontouchend:  move |_| stop_repeat(&mut up_timer),
-                "▲"
+                // \u{FE0E} = テキスト表示セレクタ (スマホで絵文字化しない)
+                "▲\u{FE0E}"
             }
             // Left
             button {
@@ -48,7 +49,7 @@ pub fn Controller(props: ControllerProps) -> Element {
                 onmouseleave:move |_| stop_repeat(&mut left_timer),
                 ontouchstart:move |e| { e.prevent_default(); start_repeat("left", &mut left_timer); },
                 ontouchend:  move |_| stop_repeat(&mut left_timer),
-                "◀"
+                "◀\u{FE0E}"
             }
             // Center decoration
             div { class: "dpad-center",
@@ -63,7 +64,7 @@ pub fn Controller(props: ControllerProps) -> Element {
                 onmouseleave:move |_| stop_repeat(&mut down_timer),
                 ontouchstart:move |e| { e.prevent_default(); start_repeat("down", &mut down_timer); },
                 ontouchend:  move |_| stop_repeat(&mut down_timer),
-                "▼"
+                "▼\u{FE0E}"
             }
             // Right
             button {
@@ -74,7 +75,7 @@ pub fn Controller(props: ControllerProps) -> Element {
                 onmouseleave:move |_| stop_repeat(&mut right_timer),
                 ontouchstart:move |e| { e.prevent_default(); start_repeat("right", &mut right_timer); },
                 ontouchend:  move |_| stop_repeat(&mut right_timer),
-                "▶"
+                "▶\u{FE0E}"
             }
         }
     }

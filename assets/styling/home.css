@@ -142,6 +142,20 @@
   height: 120px;
   z-index: 50;
 }
+
+/* スマホ: ダイアログとの重なりを防ぐためダイアログを上部に固定 */
+@media (max-width: 640px) {
+  .jiji-dialog-wrap {
+    position: fixed;
+    bottom: calc(1.2rem + 120px + 0.75rem);
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: 100%;
+    z-index: 40;
+    padding: 0 0.75rem;
+  }
+}
 .dpad-btn {
   position: absolute;
   width: 40px;
