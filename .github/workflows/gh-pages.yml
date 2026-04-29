@@ -13,31 +13,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Tailwind を先に実行して CSS ハッシュをキャッシュキーに使う
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install Tailwind CLI
+        run: npm install -D @tailwindcss/cli
+
+      - name: Build TailwindCSS
+        run: npx tailwindcss -i ./tailwind.css -o ./assets/tailwind.css --minify
+
+      - name: Compute CSS hash
+        id: css_hash
+        run: echo "hash=$(sha256sum assets/tailwind.css | awk '{print $1}')" >> $GITHUB_OUTPUT
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           targets: x86_64-unknown-linux-gnu,wasm32-unknown-unknown
 
+      # CSS 内容が変わったらキャッシュを破棄して再コンパイル
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
           cache-on-failure: "false"
+          key: css-${{ steps.css_hash.outputs.hash }}
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install Dioxus CLI
         run: cargo binstall dioxus-cli -y --force
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 23
-
-      - name: Install Node.js dependencies
-        run: npm install -D @tailwindcss/vite @tailwindcss/cli
-
-      - name: Build TailwindCSS
-        run: npx tailwindcss -i ./tailwind.css -o ./assets/tailwind.css --minify
 
       - name: Build Dioxus App
         run: dx build --release

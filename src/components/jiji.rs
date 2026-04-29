@@ -35,10 +35,13 @@ pub fn Jiji() -> Element {
                     if let Some(el) = el.dyn_ref::<web_sys::HtmlElement>() {
                         let w = el.offset_width() as f64;
                         let h = el.offset_height() as f64;
-                        sw.set(w);
-                        sh.set(h);
-                        x.set(((w - CAT_W) / 2.0).max(0.0));
-                        y.set(((h - CAT_H) / 2.0).max(0.0));
+                        // CSS が未適用 (サイズ=0) のときは更新しない
+                        if w > 0.0 && h > 0.0 {
+                            sw.set(w);
+                            sh.set(h);
+                            x.set(((w - CAT_W) / 2.0).max(0.0));
+                            y.set(((h - CAT_H) / 2.0).max(0.0));
+                        }
                     }
                 }
             }
@@ -48,18 +51,20 @@ pub fn Jiji() -> Element {
     use_future({
         let mut sw = stage_w.clone(); let mut sh = stage_h.clone();
         let mut x = x.clone();       let mut y = y.clone();
-        move || async move { sync_stage(&mut sw, &mut sh, &mut x, &mut y); }
-    });
+        move || async move {
+            // リサイズリスナー (forget でリーク → コンポーネント寿命まで有効)
+            let mut sw_r = sw.clone(); let mut sh_r = sh.clone();
+            let mut x_r = x.clone();  let mut y_r = y.clone();
+            EventListener::new(&window().unwrap(), "resize", move |_| {
+                sync_stage(&mut sw_r, &mut sh_r, &mut x_r, &mut y_r);
+            }).forget();
 
-    use_effect({
-        let mut sw = stage_w.clone(); let mut sh = stage_h.clone();
-        let mut x = x.clone();       let mut y = y.clone();
-        move || {
-            let mut sw = sw.clone(); let mut sh = sh.clone();
-            let mut x = x.clone();  let mut y = y.clone();
-            let _l = EventListener::new(&window().unwrap(), "resize", move |_| {
-                sync_stage(&mut sw, &mut sh, &mut x, &mut y);
-            });
+            // CSS 適用を待ってからレイアウト同期 (即実行だとサイズ=0 になる)
+            let mut sw2 = sw.clone(); let mut sh2 = sh.clone();
+            let mut x2 = x.clone();  let mut y2 = y.clone();
+            gloo_timers::callback::Timeout::new(150, move || {
+                sync_stage(&mut sw2, &mut sh2, &mut x2, &mut y2);
+            }).forget();
         }
     });
 
@@ -104,11 +109,11 @@ pub fn Jiji() -> Element {
         }
     };
 
-    // Book object positions (responsive to stage size)
-    let blog_obj_x  = (stage_w() * 0.16) as i32;
-    let blog_obj_y  = (stage_h() * 0.48) as i32;
-    let horror_obj_x = (stage_w() * 0.70) as i32;
-    let horror_obj_y = (stage_h() * 0.36) as i32;
+    // Book object positions — near the bottom edge of the field
+    let blog_obj_x   = (stage_w() * 0.14) as i32;
+    let blog_obj_y   = 22_i32;
+    let horror_obj_x = (stage_w() * 0.74) as i32;
+    let horror_obj_y = 22_i32;
 
     // Proximity detection (cat center vs book center)
     let cat_cx = x() + CAT_W / 2.0;
